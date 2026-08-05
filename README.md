@@ -18,6 +18,8 @@ In short, it's a React DevTools / Chrome Network tab, but for Cloudflare Agents.
 > [!IMPORTANT]
 > This is an unofficial community tool that works with the Cloudflare Agents SDK. It is not affiliated with, endorsed by, or supported by Cloudflare. Event schemas are based on the observability events published by [`cloudflare/agents`](https://github.com/cloudflare/agents).
 
+![Stream tab — the real-time event stream with channel filters and a payload inspector](https://raw.githubusercontent.com/Quant-TheodoreFelix/agents-devtools/master/docs/stream.png)
+
 ## Quick start
 
 First, add the following code to your agent.
@@ -65,6 +67,28 @@ Independently, the UI itself can export whatever is currently in the buffer: the
 To review a session later, drag an `.ndjson` file onto the UI. This pauses live ingestion and swaps the view to the recorded session (a banner shows the file name and lets you jump back). Click **Return to live** to resume — the UI backfills whatever arrived while you were looking at the recording, so nothing in between is lost.
 
 Use **Pause** in the header to freeze the view without importing anything; **Resume** backfills the gap the same way. The dropped-event counter next to it reflects the collector's ring buffer, not the UI — it rises when events are evicted before the UI ever sees them (buffer overflow), independent of pause state.
+
+## Screenshots
+
+Events show up in the UI moments after your agent emits them:
+
+![Live event stream filling up as the demo agent runs](https://raw.githubusercontent.com/Quant-TheodoreFelix/agents-devtools/master/docs/live.gif)
+
+**Timeline** — per-instance event rail with fiber run spans (green completed, red failed):
+
+![Timeline tab](https://raw.githubusercontent.com/Quant-TheodoreFelix/agents-devtools/master/docs/timeline.png)
+
+**Chat** — recovery incidents grouped into collapsible chains (detected → attempt → scheduled → completed/failed):
+
+![Chat tab](https://raw.githubusercontent.com/Quant-TheodoreFelix/agents-devtools/master/docs/chat.png)
+
+**Schedules** — a card board per schedule id, with duplicate-schedule warnings:
+
+![Schedules tab](https://raw.githubusercontent.com/Quant-TheodoreFelix/agents-devtools/master/docs/schedules.png)
+
+**Connections** — WebSocket lifecycles with close codes and durations:
+
+![Connections tab](https://raw.githubusercontent.com/Quant-TheodoreFelix/agents-devtools/master/docs/connections.png)
 
 ## Development
 

@@ -18,6 +18,8 @@
 > [!IMPORTANT]
 > 이 도구는 Cloudflare Agents SDK와 함께 동작하는 비공식 커뮤니티 도구입니다. Cloudflare와 제휴하거나 지원받지 않습니다. 이벤트 스키마는 [`cloudflare/agents`](https://github.com/cloudflare/agents)가 공개한 관측성 이벤트를 기반으로 합니다.
 
+![스트림 탭 - 채널 필터와 payload 패널이 있는 실시간 이벤트 스트림](https://raw.githubusercontent.com/Quant-TheodoreFelix/agents-devtools/master/docs/stream.png)
+
 ## 빠른 시작
 
 가장 먼저 에이전트에 다음 코드를 추가하세요.
@@ -65,6 +67,28 @@ $ npx agents-devtools --record ./session.ndjson
 나중에 세션을 다시 보려면 `.ndjson` 파일을 UI에 드래그하세요. 실시간 수신이 멈추고 화면이 녹화 세션으로 전환되며, 배너에 파일 이름이 표시되고 되돌아갈 수 있습니다. **라이브로 복귀**를 누르면 재개되며, 보고 있던 동안 도착한 이벤트를 UI가 다시 채워 넣으므로 그 사이 이벤트도 유실되지 않습니다.
 
 아무것도 가져오지 않고 화면만 멈추려면 헤더의 **일시정지**를 쓰세요. **재개**를 누르면 같은 방식으로 빈 구간을 채웁니다. 옆의 드롭 카운트는 UI가 아니라 collector의 링버퍼 기준입니다. UI가 보기도 전에 이벤트가 밀려나면(버퍼 오버플로) 늘어나며, 일시정지 여부와는 무관합니다.
+
+## 스크린샷
+
+에이전트가 이벤트를 방출하면 곧바로 UI에 나타납니다.
+
+![데모 에이전트 실행 중 실시간으로 채워지는 이벤트 스트림](https://raw.githubusercontent.com/Quant-TheodoreFelix/agents-devtools/master/docs/live.gif)
+
+**타임라인** - 인스턴스별 이벤트 레일과 fiber 실행 스팬(초록 완료, 빨강 실패)
+
+![타임라인 탭](https://raw.githubusercontent.com/Quant-TheodoreFelix/agents-devtools/master/docs/timeline.png)
+
+**채팅** - 접이식 체인으로 묶인 리커버리 인시던트(감지 -> 시도 -> 예약 -> 성공/실패)
+
+![채팅 탭](https://raw.githubusercontent.com/Quant-TheodoreFelix/agents-devtools/master/docs/chat.png)
+
+**스케줄** - 스케줄 id별 카드 보드와 중복 스케줄 경고
+
+![스케줄 탭](https://raw.githubusercontent.com/Quant-TheodoreFelix/agents-devtools/master/docs/schedules.png)
+
+**연결** - 종료 코드와 지속시간이 담긴 WebSocket 라이프사이클
+
+![연결 탭](https://raw.githubusercontent.com/Quant-TheodoreFelix/agents-devtools/master/docs/connections.png)
 
 ## 개발
 
