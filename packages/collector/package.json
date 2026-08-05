@@ -2,7 +2,13 @@
   "name": "agents-devtools",
   "version": "0.1.0",
   "description": "Local DevTools for Cloudflare Agents SDK observability events. Unofficial community tool, not affiliated with Cloudflare.",
-  "keywords": ["cloudflare", "agents", "durable-objects", "devtools", "observability"],
+  "keywords": [
+    "cloudflare",
+    "agents",
+    "durable-objects",
+    "devtools",
+    "observability"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -12,7 +18,7 @@
   "bugs": "https://github.com/Quant-TheodoreFelix/agents-devtools/issues",
   "type": "module",
   "bin": {
-    "agents-devtools": "./dist/cli.js"
+    "agents-devtools": "dist/cli.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -30,7 +36,12 @@
       "import": "./dist/protocol.js"
     }
   },
-  "files": ["dist", "ui-dist", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "ui-dist",
+    "README.md",
+    "LICENSE"
+  ],
   "engines": {
     "node": ">=20"
   },
@@ -47,7 +58,9 @@
     "agents": ">=0.7.0 <1"
   },
   "peerDependenciesMeta": {
-    "agents": { "optional": true }
+    "agents": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@agents-devtools/client": "workspace:*",
