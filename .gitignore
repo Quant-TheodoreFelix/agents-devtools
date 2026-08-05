@@ -1,0 +1,12 @@
+.dev.vars
+.DS_Store
+*.log
+THIS_PROJECT.md
+dist/
+coverage/
+node_modules/
+.idea/
+.claude/
+.gstack/
+.wrangler/
+.ast-outline/
