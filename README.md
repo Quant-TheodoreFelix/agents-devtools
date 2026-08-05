@@ -1,6 +1,6 @@
 # agents-devtools
 
-[![Language](https://img.shields.io/badge/README-Korean-blue?style=for-the-badge)](README_KR.md)
+[![Language](https://img.shields.io/badge/README-Korean_Ver-blue?style=for-the-badge)](README_KR.md)
 
 Local DevTools for agents built with the [Cloudflare Agents SDK](https://github.com/cloudflare/agents) (`agents` npm package). Collects the structured observability events your agents emit during `wrangler dev` and visualizes them in a web UI.
 
