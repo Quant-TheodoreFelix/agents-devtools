@@ -1,6 +1,9 @@
 # agents-devtools
 
 [![Language](https://img.shields.io/badge/README-English_Ver-blue?style=for-the-badge)](README.md)
+[![npm version](https://img.shields.io/npm/v/agents-devtools?style=for-the-badge)](https://www.npmjs.com/package/agents-devtools)
+[![npm downloads](https://img.shields.io/npm/dm/agents-devtools?style=for-the-badge)](https://www.npmjs.com/package/agents-devtools)
+[![License](https://img.shields.io/npm/l/agents-devtools?style=for-the-badge)](LICENSE)
 
 [Cloudflare Agents SDK](https://github.com/cloudflare/agents)(`agents` npm 패키지)로 만들어진 에이전트를 위한 로컬 DevTools입니다. `wrangler dev` 중 에이전트가 방출하는 구조화 관측성 이벤트를 수집해 웹 UI로 시각화합니다.
 
@@ -41,6 +44,18 @@ $ npx agents-devtools
 Collector는 `127.0.0.1:4111`에서 대기하고 UI는 `http://127.0.0.1:4110`에서 실행됩니다.
 
 `devtools()`는 SDK 기본 `diagnostics_channel` 방출을 그대로 보존하며 실패에 안전합니다. Collector가 실행 중이 아니어도 에이전트는 영향받지 않습니다(이벤트는 조용히 드롭되고, 반복 실패 후 클라이언트는 스스로 비활성화). 이벤트 전달 방식은 설계상 권장되는 수준으로 구축되었습니다. 이 도구는 감사 로그가 아니라 관측성 도구입니다.
+
+### 호환성
+
+|                | 요구 사항                                                                                                    |
+|----------------|----------------------------------------------------------------------------------------------------------|
+| `agents`(peer) | `>=0.7.0 <1`                                                                                             |
+| 채팅 이벤트 지원      | [`@cloudflare/ai-chat`](https://www.npmjs.com/package/@cloudflare/ai-chat) 필요(SDK 0.20부터 `agents`에서 분리됨) |
+| Node.js        | `>=20`                                                                                                   |
+| 로컬 런타임         | `wrangler dev` 기준 (배포된 프로덕션 Worker는 Tail Worker가 필요하며 아직 미지원)                                            |
+| 브라우저(UI)       | 현재 지원되는 최신 브라우저(Chrome, Firefox, Safari, Edge)                                                           |
+
+`agents@0.20.1`과 `@cloudflare/ai-chat@0.10.1` 기준으로 검증했습니다. 이벤트 스키마는 최대한 상위 호환을 지향합니다. 알 수 없는 이벤트 타입이 와도 UI가 죽지 않고 스트림 탭에 raw JSON으로 표시됩니다.
 
 ### 옵트인 상태 스냅샷
 

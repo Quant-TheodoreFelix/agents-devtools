@@ -1,6 +1,9 @@
 # agents-devtools
 
 [![Language](https://img.shields.io/badge/README-Korean_Ver-blue?style=for-the-badge)](README_KR.md)
+[![npm version](https://img.shields.io/npm/v/agents-devtools?style=for-the-badge)](https://www.npmjs.com/package/agents-devtools)
+[![npm downloads](https://img.shields.io/npm/dm/agents-devtools?style=for-the-badge)](https://www.npmjs.com/package/agents-devtools)
+[![License](https://img.shields.io/npm/l/agents-devtools?style=for-the-badge)](LICENSE)
 
 Local DevTools for agents built with the [Cloudflare Agents SDK](https://github.com/cloudflare/agents) (`agents` npm package). Collects the structured observability events your agents emit during `wrangler dev` and visualizes them in a web UI.
 
@@ -41,6 +44,18 @@ $ npx agents-devtools
 The collector listens on `127.0.0.1:4111` and the UI runs at `http://127.0.0.1:4110`.
 
 `devtools()` preserves the SDK's default `diagnostics_channel` emission and is fail-safe: if the collector is not running, your agent is unaffected (events are silently dropped and the client disables itself after repeated failures). Event delivery is best-effort by design — this is observability tooling, not an audit log.
+
+### Compatibility
+
+|                    | Requirement                                                                                                             |
+|--------------------|-------------------------------------------------------------------------------------------------------------------------|
+| `agents` (peer)    | `>=0.7.0 <1`                                                                                                            |
+| Chat event support | requires [`@cloudflare/ai-chat`](https://www.npmjs.com/package/@cloudflare/ai-chat) (moved out of `agents` in SDK 0.20) |
+| Node.js            | `>=20`                                                                                                                  |
+| Local runtime      | `wrangler dev` (production Workers need a Tail Worker, not yet supported)                                               |
+| Browser (UI)       | any current evergreen browser (Chrome, Firefox, Safari, Edge)                                                           |
+
+Verified against `agents@0.20.1` and `@cloudflare/ai-chat@0.10.1`. The event schema is best-effort forward compatible — unknown event types render as raw JSON in the Stream tab instead of crashing the UI.
 
 ### Opt-in state snapshots
 
