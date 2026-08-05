@@ -9,7 +9,7 @@ export type Row = {
 
 export type ConnectionStatus = "connecting" | "connected" | "disconnected";
 
-export type Tab = "stream" | "timeline";
+export type Tab = "stream" | "timeline" | "chat" | "schedules" | "connections";
 
 type StreamState = {
   rows: Row[];
@@ -79,7 +79,10 @@ export const useStore = create<StreamState>((set) => ({
   setSearch: (search) => set({ search }),
   setActiveTab: (activeTab) => set({ activeTab }),
   selectInstance: (selectedInstance) =>
-    set({ selectedInstance, activeTab: "timeline" }),
+    set((state) => ({
+      selectedInstance,
+      activeTab: state.activeTab === "stream" ? "timeline" : state.activeTab
+    })),
   setLocale: (locale) => {
     persistLocale(locale);
     set({ locale });

@@ -64,6 +64,25 @@ $ cd examples/demo-agent && pnpm exercise
 
 Events appear in the UI almost immediately. Killing the DevTools process must not affect the demo agent — that's a design guarantee, verified by running the exercise script both with and without the collector.
 
+### Reproducing the debugging scenarios
+
+The demo includes a chat agent (`DemoChatAgent`) with a mock streaming model — no API key required. It exposes a test hook that force-stalls the model stream, which drives the SDK's stall watchdog (`chatStreamStallTimeoutMs: 2000`) and bounded recovery (`chatRecovery: { maxAttempts: 3, noProgressTimeoutMs: 15000 }`).
+
+With the collector and `wrangler dev` running (terminals 1 and 2 above):
+
+```sh
+$ cd examples/demo-agent
+$ pnpm exercise:scenarios s1   # stalled stream -> recovery chain (~40s)
+$ pnpm exercise:scenarios s2   # 12 stale one-shots -> schedule:duplicate_warning
+$ pnpm exercise:scenarios s4   # unreachable MCP server -> mcp:client:connect error
+```
+
+- **S1 (stalled chat stream)** — the script first stalls one turn, producing a recovery chain that heals (`chat:recovery:detected` -> `attempt` -> `scheduled` -> `completed`), then stalls every turn so the retried recovery run dies too (`chat:recovery:failed`). Open the **Chat** tab: each incident is a collapsible chain with attempt progress and terminal status. Each chat turn also emits real `fiber:run:*` spans, visible on the **Timeline** tab. (`@cloudflare/ai-chat` 0.10.1 routes a watchdog stall directly into recovery without emitting a separate `chat:stream:stalled` event; the UI still renders that event into the chain when present.)
+- **S2 (duplicate schedules)** — 12 one-shot schedules with the same callback land in a single alarm cycle, which the SDK flags with `schedule:duplicate_warning`. Open the **Schedules** tab: the warning banner shows the callback and count above the per-id cards.
+- **S4 (MCP connection failure)** — connecting to `http://127.0.0.1:9/mcp` fails version negotiation. Filter the **Stream** tab by the `mcp` channel: each `mcp:client:connect` event carries `url`, `transport`, `state: "failed"`, and `error`.
+
+`pnpm exercise:fiber` additionally injects synthetic fiber span events for the Timeline tab.
+
 ## License
 
 [MIT](LICENSE).

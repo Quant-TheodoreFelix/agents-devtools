@@ -1,12 +1,20 @@
 import { instanceKey, RAW_CHANNELS } from "@agents-devtools/protocol";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentType
+} from "react";
 import {
   channelClass,
   channelShortName,
   formatTime,
   payloadPreview
 } from "./format";
+import { ChatView } from "./ChatView";
+import { ConnectionsView } from "./ConnectionsView";
 import {
   isLocaleId,
   LOCALE_IDS,
@@ -14,6 +22,7 @@ import {
   type MessageKey
 } from "./i18n";
 import { useT } from "./i18n/useT";
+import { SchedulesView } from "./SchedulesView";
 import { Sidebar } from "./Sidebar";
 import { useStore, type Row, type Tab } from "./store";
 import { severityForType } from "./timeline";
@@ -268,7 +277,10 @@ function DetailPanel() {
 
 const TABS: Array<{ id: Tab; labelKey: MessageKey }> = [
   { id: "stream", labelKey: "tab.stream" },
-  { id: "timeline", labelKey: "tab.timeline" }
+  { id: "timeline", labelKey: "tab.timeline" },
+  { id: "chat", labelKey: "tab.chat" },
+  { id: "schedules", labelKey: "tab.schedules" },
+  { id: "connections", labelKey: "tab.connections" }
 ];
 
 function TabBar() {
@@ -301,23 +313,31 @@ function StreamTab() {
   );
 }
 
+const TAB_VIEWS: Record<Exclude<Tab, "stream">, ComponentType> = {
+  timeline: TimelineView,
+  chat: ChatView,
+  schedules: SchedulesView,
+  connections: ConnectionsView
+};
+
 export function App() {
   const activeTab = useStore((s) => s.activeTab);
   const locale = useStore((s) => s.locale);
   useEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
+  const TabView = activeTab === "stream" ? null : TAB_VIEWS[activeTab];
   return (
     <div className="app">
       <Header />
       <TabBar />
       <main className="main">
         <Sidebar />
-        {activeTab === "stream" ? (
+        {TabView === null ? (
           <StreamTab />
         ) : (
           <div className="content">
-            <TimelineView />
+            <TabView />
           </div>
         )}
         <DetailPanel />

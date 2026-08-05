@@ -1,8 +1,11 @@
+import { AIChatAgent, type OnChatMessageOptions } from "@cloudflare/ai-chat";
 import { Agent, callable, routeAgentRequest } from "agents";
 import { devtools } from "agents-devtools/client";
+import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
 
 type Env = {
   DemoAgent: DurableObjectNamespace;
+  DemoChatAgent: DurableObjectNamespace;
 };
 
 type State = {
@@ -47,6 +50,92 @@ export class DemoAgent extends Agent<Env, State> {
 
   async onRequest(_request: Request): Promise<Response> {
     return Response.json({ ok: true, state: this.state });
+  }
+}
+
+type StallMode = "none" | "once" | "always";
+
+type ChatState = {
+  stall: StallMode;
+};
+
+export class DemoChatAgent extends AIChatAgent<Env, ChatState> {
+  initialState: ChatState = { stall: "none" };
+
+  override observability = devtools();
+
+  chatRecovery = { maxAttempts: 3, noProgressTimeoutMs: 15_000 };
+
+  chatStreamStallTimeoutMs = 2_000;
+
+  @callable()
+  setStall(mode: StallMode): StallMode {
+    this.setState({ stall: mode });
+    return mode;
+  }
+
+  @callable()
+  async say(text: string): Promise<{ requestId: string; status: string }> {
+    const result = await this.saveMessages((messages) => [
+      ...messages,
+      {
+        id: crypto.randomUUID(),
+        role: "user" as const,
+        parts: [{ type: "text" as const, text }]
+      }
+    ]);
+    return { requestId: result.requestId, status: result.status };
+  }
+
+  @callable()
+  async scheduleBurst(count: number): Promise<number> {
+    for (let i = 0; i < count; i += 1) {
+      await this.schedule(1, "burst", { i });
+    }
+    return count;
+  }
+
+  async burst(_payload: { i: number }): Promise<void> {}
+
+  @callable()
+  async connectBrokenMcp(): Promise<string> {
+    try {
+      await this.addMcpServer("broken", "http://127.0.0.1:9/mcp");
+      return "connected";
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error);
+    }
+  }
+
+  override async onChatMessage(
+    _onFinish: unknown,
+    options?: OnChatMessageOptions
+  ): Promise<Response> {
+    const stall = this.state.stall;
+    if (stall === "once") this.setState({ stall: "none" });
+    const shouldStall = stall !== "none";
+    const abortSignal = options?.abortSignal;
+
+    const stream = createUIMessageStream({
+      execute: async ({ writer }) => {
+        const id = crypto.randomUUID();
+        writer.write({ type: "start" });
+        writer.write({ type: "text-start", id });
+        writer.write({ type: "text-delta", id, delta: "mock: " });
+        if (shouldStall) {
+          await new Promise<void>((resolve) => {
+            abortSignal?.addEventListener("abort", () => resolve(), {
+              once: true
+            });
+          });
+          return;
+        }
+        writer.write({ type: "text-delta", id, delta: "the answer is 42" });
+        writer.write({ type: "text-end", id });
+        writer.write({ type: "finish" });
+      }
+    });
+    return createUIMessageStreamResponse({ stream });
   }
 }
 

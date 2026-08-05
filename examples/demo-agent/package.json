@@ -6,11 +6,16 @@
   "scripts": {
     "dev": "wrangler dev",
     "exercise": "node scripts/exercise.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "exercise:fiber": "node scripts/exercise-fiber.mjs",
+    "exercise:scenarios": "node scripts/exercise-scenarios.mjs"
   },
   "dependencies": {
+    "@cloudflare/ai-chat": "^0.10.1",
     "agents": "^0.20.1",
-    "agents-devtools": "workspace:*"
+    "agents-devtools": "workspace:*",
+    "ai": "^6.0.241",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260804.1",

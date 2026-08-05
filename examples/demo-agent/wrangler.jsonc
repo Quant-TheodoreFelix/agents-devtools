@@ -9,6 +9,10 @@
       {
         "name": "DemoAgent",
         "class_name": "DemoAgent"
+      },
+      {
+        "name": "DemoChatAgent",
+        "class_name": "DemoChatAgent"
       }
     ]
   },
@@ -16,6 +20,10 @@
     {
       "tag": "v1",
       "new_sqlite_classes": ["DemoAgent"]
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": ["DemoChatAgent"]
     }
   ]
 }

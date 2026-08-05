@@ -7,9 +7,9 @@ import {
   payloadPreview
 } from "./format";
 import { useT } from "./i18n/useT";
-import { keyOfRow, useInstances } from "./Sidebar";
 import { useStore } from "./store";
 import { buildTimeline, type TimelineItem } from "./timeline";
+import { useInstanceScope } from "./useInstanceScope";
 
 function laneTitle(item: TimelineItem): string | null {
   const span = item.span;
@@ -22,27 +22,16 @@ function laneTitle(item: TimelineItem): string | null {
 }
 
 export function TimelineView() {
-  const rows = useStore((s) => s.rows);
-  const selectedInstance = useStore((s) => s.selectedInstance);
-  const selectInstance = useStore((s) => s.selectInstance);
   const select = useStore((s) => s.select);
   const selectedSeq = useStore((s) => s.selectedSeq);
-  const instances = useInstances();
+  const { effectiveKey, rows: instanceRows } = useInstanceScope();
   const t = useT();
   const [follow, setFollow] = useState(true);
 
-  const effectiveKey = selectedInstance ?? instances[0]?.key ?? null;
-
-  useEffect(() => {
-    if (selectedInstance === null && effectiveKey !== null) {
-      selectInstance(effectiveKey);
-    }
-  }, [selectedInstance, effectiveKey, selectInstance]);
-
   const timeline = useMemo(() => {
     if (effectiveKey === null) return null;
-    return buildTimeline(rows.filter((row) => keyOfRow(row) === effectiveKey));
-  }, [rows, effectiveKey]);
+    return buildTimeline(instanceRows);
+  }, [instanceRows, effectiveKey]);
 
   const items = timeline?.items ?? [];
   const laneCount = timeline?.laneCount ?? 0;
