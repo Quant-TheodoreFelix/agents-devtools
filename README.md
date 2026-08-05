@@ -39,6 +39,18 @@ The collector listens on `127.0.0.1:4111` and the UI runs at `http://127.0.0.1:4
 
 `devtools()` preserves the SDK's default `diagnostics_channel` emission and is fail-safe: if the collector is not running, your agent is unaffected (events are silently dropped and the client disables itself after repeated failures). Event delivery is best-effort by design — this is observability tooling, not an audit log.
 
+### Opt-in state snapshots
+
+`state:update` events carry an empty payload by default — the SDK does not expose your agent's state to observability listeners. Pass `captureState` to attach a shallow, size-capped snapshot:
+
+```ts
+export class MyAgent extends Agent<Env, State> {
+  override observability = devtools({ captureState: () => this.state });
+}
+```
+
+`captureState` is only invoked for `state:update` events and never mutates the event forwarded to the original SDK behavior (`base`) — it only augments the copy sent to the collector. The snapshot is shallow (nested objects/arrays/maps/sets are summarized as `[object]` / `[array(n)]`, not recursed into), long strings are truncated, and the whole snapshot is dropped in favor of a `{ "[truncated]": true }` marker if it would exceed a few KB. This is off by default because agent state can contain sensitive data — only enable it for local debugging.
+
 ## Development
 
 It's a pnpm monorepo and requires Node 20 or later.

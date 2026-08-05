@@ -93,4 +93,65 @@ describe("devtools()", () => {
     expect(fetch).not.toHaveBeenCalled();
     expect(base.emit).toHaveBeenCalledTimes(1);
   });
+
+  const stateEvent = (payload = {}): ObservabilityEvent =>
+    ({
+      type: "state:update",
+      agent: "MyAgent",
+      name: "user-123",
+      payload,
+      timestamp: Date.now()
+    }) as ObservabilityEvent;
+
+  it("attaches a shallow snapshot to state:update when captureState is set", async () => {
+    const obs = devtools({
+      base: null,
+      captureState: () => ({ counter: 1, big: "x".repeat(500) })
+    });
+    obs.emit(stateEvent());
+    await vi.advanceTimersByTimeAsync(250);
+    const [, init] = vi.mocked(fetch).mock.calls[0]!;
+    const sent = JSON.parse((init as RequestInit).body as string).events[0].event;
+    expect(sent.payload.snapshot.counter).toBe(1);
+    expect(sent.payload.snapshot.big).toMatch(/…\(truncated\)$/);
+  });
+
+  it("never mutates the event passed to base for state:update", () => {
+    const base = { emit: vi.fn() };
+    const obs = devtools({ base, captureState: () => ({ counter: 1 }) });
+    const event = stateEvent();
+    obs.emit(event);
+    expect(base.emit).toHaveBeenCalledWith(event);
+    expect(event.payload).toEqual({});
+  });
+
+  it("leaves non state:update events untouched by captureState", async () => {
+    const obs = devtools({ base: null, captureState: () => ({ counter: 1 }) });
+    obs.emit(rpcEvent(1));
+    await vi.advanceTimersByTimeAsync(250);
+    const [, init] = vi.mocked(fetch).mock.calls[0]!;
+    const sent = JSON.parse((init as RequestInit).body as string).events[0].event;
+    expect(sent.payload.snapshot).toBeUndefined();
+  });
+
+  it("swallows a throwing captureState without dropping the event", async () => {
+    const obs = devtools({
+      base: null,
+      captureState: () => {
+        throw new Error("nope");
+      }
+    });
+    expect(() => obs.emit(stateEvent())).not.toThrow();
+    await vi.advanceTimersByTimeAsync(250);
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not attach a snapshot when captureState is not set", async () => {
+    const obs = devtools({ base: null });
+    obs.emit(stateEvent());
+    await vi.advanceTimersByTimeAsync(250);
+    const [, init] = vi.mocked(fetch).mock.calls[0]!;
+    const sent = JSON.parse((init as RequestInit).body as string).events[0].event;
+    expect(sent.payload.snapshot).toBeUndefined();
+  });
 });

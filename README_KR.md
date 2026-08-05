@@ -39,6 +39,18 @@ Collector는 `127.0.0.1:4111`에서 대기하고 UI는 `http://127.0.0.1:4110`�
 
 `devtools()`는 SDK 기본 `diagnostics_channel` 방출을 그대로 보존하며 실패에 안전합니다. Collector가 실행 중이 아니어도 에이전트는 영향받지 않습니다(이벤트는 조용히 드롭되고, 반복 실패 후 클라이언트는 스스로 비활성화). 이벤트 전달 방식은 설계상 권장되는 수준으로 구축되었습니다. 이 도구는 감사 로그가 아니라 관측성 도구입니다.
 
+### 옵트인 상태 스냅샷
+
+`state:update` 이벤트는 기본적으로 빈 payload를 갖습니다. SDK는 에이전트 상태를 관측성 리스너에 노출하지 않습니다. `captureState`를 전달하면 얕고 크기 제한이 걸린 스냅샷을 동봉할 수 있습니다.
+
+```ts
+export class MyAgent extends Agent<Env, State> {
+  override observability = devtools({ captureState: () => this.state });
+}
+```
+
+`captureState`는 `state:update` 이벤트에만 호출되며 원본 SDK 동작(`base`)으로 전달되는 이벤트는 절대 변형하지 않습니다. collector로 보내는 사본에만 동봉됩니다. 스냅샷은 얕습니다(중첩된 객체·배열·맵·셋은 재귀하지 않고 `[object]` `[array(n)]`처럼 요약), 긴 문자열은 잘리며, 전체 크기가 수 KB를 넘으면 스냅샷 대신 `{ "[truncated]": true }` 마커로 대체됩니다. 상태에는 민감한 데이터가 있을 수 있으므로 기본값은 꺼짐이며 로컬 디버깅 용도로만 켜야 합니다.
+
 ## 개발
 
 pnpm 모노레포이며, Node 20 이상을 필요로 합니다.

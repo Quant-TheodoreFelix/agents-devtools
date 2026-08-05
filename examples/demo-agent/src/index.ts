@@ -16,7 +16,7 @@ type State = {
 export class DemoAgent extends Agent<Env, State> {
   initialState: State = { counter: 0, lastGreeting: null };
 
-  override observability = devtools();
+  override observability = devtools({ captureState: () => this.state });
 
   @callable()
   greet(name: string): string {
