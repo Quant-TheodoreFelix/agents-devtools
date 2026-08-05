@@ -41,8 +41,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@agents-devtools/client": "workspace:*",
-    "@agents-devtools/protocol": "workspace:*",
     "ws": "^8.18.0"
   },
   "peerDependencies": {
@@ -52,6 +50,8 @@
     "agents": { "optional": true }
   },
   "devDependencies": {
+    "@agents-devtools/client": "workspace:*",
+    "@agents-devtools/protocol": "workspace:*",
     "@types/node": "^24.0.0",
     "@types/ws": "^8.18.0",
     "tsup": "^8.5.0",
