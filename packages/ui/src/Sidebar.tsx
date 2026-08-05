@@ -1,5 +1,6 @@
 import { instanceKey } from "@agents-devtools/protocol";
 import { useMemo } from "react";
+import { useT } from "./i18n/useT";
 import { useStore, type Row } from "./store";
 import { summarizeInstances, type InstanceSummary } from "./timeline";
 
@@ -16,12 +17,13 @@ export function Sidebar() {
   const instances = useInstances();
   const selectedInstance = useStore((s) => s.selectedInstance);
   const selectInstance = useStore((s) => s.selectInstance);
+  const t = useT();
 
   return (
     <nav className="sidebar">
-      <div className="sidebar-title">Instances</div>
+      <div className="sidebar-title">{t("sidebar.instances")}</div>
       {instances.length === 0 && (
-        <div className="sidebar-empty">no instances yet</div>
+        <div className="sidebar-empty">{t("sidebar.empty")}</div>
       )}
       {instances.map((instance) => (
         <button

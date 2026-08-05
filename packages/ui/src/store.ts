@@ -1,5 +1,6 @@
 import type { EventEnvelope } from "@agents-devtools/protocol";
 import { create } from "zustand";
+import { loadInitialLocale, persistLocale, type LocaleId } from "./i18n";
 
 export type Row = {
   env: EventEnvelope;
@@ -20,6 +21,7 @@ type StreamState = {
   search: string;
   activeTab: Tab;
   selectedInstance: string | null;
+  locale: LocaleId;
   addEnvelopes: (list: EventEnvelope[]) => void;
   setDropped: (n: number) => void;
   setStatus: (status: ConnectionStatus) => void;
@@ -29,6 +31,7 @@ type StreamState = {
   setSearch: (search: string) => void;
   setActiveTab: (tab: Tab) => void;
   selectInstance: (key: string | null) => void;
+  setLocale: (locale: LocaleId) => void;
   clear: () => void;
 };
 
@@ -54,6 +57,7 @@ export const useStore = create<StreamState>((set) => ({
   search: "",
   activeTab: "stream",
   selectedInstance: null,
+  locale: loadInitialLocale(),
   addEnvelopes: (list) =>
     set((state) => {
       const fresh = list.filter((e) => e.seq > state.lastSeq);
@@ -76,5 +80,9 @@ export const useStore = create<StreamState>((set) => ({
   setActiveTab: (activeTab) => set({ activeTab }),
   selectInstance: (selectedInstance) =>
     set({ selectedInstance, activeTab: "timeline" }),
+  setLocale: (locale) => {
+    persistLocale(locale);
+    set({ locale });
+  },
   clear: () => set({ rows: [], selectedSeq: null })
 }));

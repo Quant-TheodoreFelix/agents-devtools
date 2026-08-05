@@ -6,6 +6,7 @@ import {
   formatTime,
   payloadPreview
 } from "./format";
+import { useT } from "./i18n/useT";
 import { keyOfRow, useInstances } from "./Sidebar";
 import { useStore } from "./store";
 import { buildTimeline, type TimelineItem } from "./timeline";
@@ -27,6 +28,7 @@ export function TimelineView() {
   const select = useStore((s) => s.select);
   const selectedSeq = useStore((s) => s.selectedSeq);
   const instances = useInstances();
+  const t = useT();
   const [follow, setFollow] = useState(true);
 
   const effectiveKey = selectedInstance ?? instances[0]?.key ?? null;
@@ -60,20 +62,20 @@ export function TimelineView() {
   }, [items.length, follow, virtualizer]);
 
   if (effectiveKey === null) {
-    return <div className="empty">no instance selected</div>;
+    return <div className="empty">{t("timeline.noInstance")}</div>;
   }
 
   return (
     <div className="table-wrap">
       <div className="table-head">
-        <span className="col-time">time</span>
+        <span className="col-time">{t("table.time")}</span>
         <span
           className="col-lanes"
           style={{ width: Math.max(laneCount, 1) * 14 }}
         />
-        <span className="col-chip">channel</span>
-        <span className="col-type">type</span>
-        <span className="col-payload">payload</span>
+        <span className="col-chip">{t("table.channel")}</span>
+        <span className="col-type">{t("table.type")}</span>
+        <span className="col-payload">{t("table.payload")}</span>
         <span className="timeline-instance">{effectiveKey}</span>
         <label className="follow">
           <input
@@ -81,7 +83,7 @@ export function TimelineView() {
             checked={follow}
             onChange={(e) => setFollow(e.target.checked)}
           />
-          follow
+          {t("table.follow")}
         </label>
       </div>
       <div className="table-body" ref={parentRef}>
@@ -152,7 +154,7 @@ export function TimelineView() {
           })}
         </div>
         {items.length === 0 && (
-          <div className="empty">no events for this instance yet</div>
+          <div className="empty">{t("timeline.empty")}</div>
         )}
       </div>
     </div>

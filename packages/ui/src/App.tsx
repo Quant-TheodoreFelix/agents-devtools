@@ -7,6 +7,13 @@ import {
   formatTime,
   payloadPreview
 } from "./format";
+import {
+  isLocaleId,
+  LOCALE_IDS,
+  LOCALE_LABELS,
+  type MessageKey
+} from "./i18n";
+import { useT } from "./i18n/useT";
 import { Sidebar } from "./Sidebar";
 import { useStore, type Row, type Tab } from "./store";
 import { severityForType } from "./timeline";
@@ -14,10 +21,35 @@ import { TimelineView } from "./TimelineView";
 
 function StatusDot() {
   const status = useStore((s) => s.status);
+  const t = useT();
+  const label = t(`status.${status}`);
   return (
-    <span className={`status status-${status}`} title={status}>
-      ● {status}
+    <span className={`status status-${status}`} title={label}>
+      ● {label}
     </span>
+  );
+}
+
+function LanguageSelect() {
+  const locale = useStore((s) => s.locale);
+  const setLocale = useStore((s) => s.setLocale);
+  const t = useT();
+  return (
+    <select
+      className="lang-select"
+      aria-label={t("header.language")}
+      value={locale}
+      onChange={(e) => {
+        const next = e.target.value;
+        if (isLocaleId(next)) setLocale(next);
+      }}
+    >
+      {LOCALE_IDS.map((id) => (
+        <option key={id} value={id}>
+          {LOCALE_LABELS[id]}
+        </option>
+      ))}
+    </select>
   );
 }
 
@@ -25,17 +57,23 @@ function Header() {
   const dropped = useStore((s) => s.dropped);
   const total = useStore((s) => s.rows.length);
   const clear = useStore((s) => s.clear);
+  const t = useT();
   return (
     <header className="header">
       <h1>agents-devtools</h1>
       <StatusDot />
-      <span className="meta">{total.toLocaleString()} events</span>
+      <span className="meta">
+        {t("header.events", { count: total.toLocaleString() })}
+      </span>
       {dropped > 0 && (
-        <span className="meta warn">{dropped.toLocaleString()} dropped</span>
+        <span className="meta warn">
+          {t("header.dropped", { count: dropped.toLocaleString() })}
+        </span>
       )}
       <span className="spacer" />
+      <LanguageSelect />
       <button type="button" onClick={clear}>
-        Clear
+        {t("header.clear")}
       </button>
     </header>
   );
@@ -47,6 +85,7 @@ function FilterBar() {
   const clearChannelFilter = useStore((s) => s.clearChannelFilter);
   const search = useStore((s) => s.search);
   const setSearch = useStore((s) => s.setSearch);
+  const t = useT();
   const [draft, setDraft] = useState(search);
 
   useEffect(() => {
@@ -61,7 +100,7 @@ function FilterBar() {
         className={channelFilter.length === 0 ? "chip chip-all active" : "chip chip-all"}
         onClick={clearChannelFilter}
       >
-        all
+        {t("filter.all")}
       </button>
       {RAW_CHANNELS.map((raw) => (
         <button
@@ -79,7 +118,7 @@ function FilterBar() {
       ))}
       <input
         className="search"
-        placeholder="search type / agent / payload…"
+        placeholder={t("filter.searchPlaceholder")}
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
       />
@@ -109,6 +148,7 @@ function useFilteredRows(): Row[] {
 function EventTable({ rows }: { rows: Row[] }) {
   const select = useStore((s) => s.select);
   const selectedSeq = useStore((s) => s.selectedSeq);
+  const t = useT();
   const parentRef = useRef<HTMLDivElement>(null);
   const [follow, setFollow] = useState(true);
 
@@ -128,18 +168,18 @@ function EventTable({ rows }: { rows: Row[] }) {
   return (
     <div className="table-wrap">
       <div className="table-head">
-        <span className="col-time">time</span>
-        <span className="col-chip">channel</span>
-        <span className="col-type">type</span>
-        <span className="col-instance">instance</span>
-        <span className="col-payload">payload</span>
+        <span className="col-time">{t("table.time")}</span>
+        <span className="col-chip">{t("table.channel")}</span>
+        <span className="col-type">{t("table.type")}</span>
+        <span className="col-instance">{t("table.instance")}</span>
+        <span className="col-payload">{t("table.payload")}</span>
         <label className="follow">
           <input
             type="checkbox"
             checked={follow}
             onChange={(e) => setFollow(e.target.checked)}
           />
-          follow
+          {t("table.follow")}
         </label>
       </div>
       <div className="table-body" ref={parentRef}>
@@ -192,8 +232,9 @@ function EventTable({ rows }: { rows: Row[] }) {
         </div>
         {rows.length === 0 && (
           <div className="empty">
-            waiting for events… run your agent with{" "}
-            <code>observability = devtools()</code> under wrangler dev
+            {t("stream.empty").split("{code}")[0] ?? ""}
+            <code>observability = devtools()</code>
+            {t("stream.empty").split("{code}")[1] ?? ""}
           </div>
         )}
       </div>
@@ -225,14 +266,15 @@ function DetailPanel() {
   );
 }
 
-const TABS: Array<{ id: Tab; label: string }> = [
-  { id: "stream", label: "Stream" },
-  { id: "timeline", label: "Timeline" }
+const TABS: Array<{ id: Tab; labelKey: MessageKey }> = [
+  { id: "stream", labelKey: "tab.stream" },
+  { id: "timeline", labelKey: "tab.timeline" }
 ];
 
 function TabBar() {
   const activeTab = useStore((s) => s.activeTab);
   const setActiveTab = useStore((s) => s.setActiveTab);
+  const t = useT();
   return (
     <div className="tabbar">
       {TABS.map((tab) => (
@@ -242,7 +284,7 @@ function TabBar() {
           className={tab.id === activeTab ? "tab active" : "tab"}
           onClick={() => setActiveTab(tab.id)}
         >
-          {tab.label}
+          {t(tab.labelKey)}
         </button>
       ))}
     </div>
@@ -261,6 +303,10 @@ function StreamTab() {
 
 export function App() {
   const activeTab = useStore((s) => s.activeTab);
+  const locale = useStore((s) => s.locale);
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
   return (
     <div className="app">
       <Header />

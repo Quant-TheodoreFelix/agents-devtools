@@ -90,6 +90,20 @@ button:hover {
   border-color: var(--fg-dim);
 }
 
+.lang-select {
+  background: var(--bg-alt);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.lang-select:hover {
+  border-color: var(--fg-dim);
+}
+
 .filterbar {
   display: flex;
   align-items: center;
