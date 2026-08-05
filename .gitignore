@@ -3,6 +3,9 @@
 *.log
 THIS_PROJECT.md
 dist/
+packages/collector/ui-dist/
+packages/collector/LICENSE
+packages/collector/README.md
 coverage/
 node_modules/
 .idea/

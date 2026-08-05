@@ -110,6 +110,19 @@ $ pnpm exercise:scenarios s4   # 연결 불가 MCP 서버 -> mcp:client:connect 
 
 `pnpm exercise:fiber`는 타임라인 탭용 합성 fiber 스팬 이벤트를 추가로 주입합니다.
 
+### 배포
+
+`packages/collector`만 `agents-devtools` npm 패키지로 배포됩니다(CLI + UI 번들 + `./client`·`./protocol` 서브패스 export). `protocol` `client` `ui`는 private 워크스페이스 패키지로 남아 빌드 시점에 번들됩니다.
+
+```sh
+$ pnpm build                              # ui/dist와 collector/dist를 빌드
+$ cd packages/collector
+$ npm pack --dry-run                      # 배포 전 tarball 내용 확인
+$ pnpm publish --access public            # workspace:* 의존성을 자동으로 치환
+```
+
+`pnpm publish`는 먼저 패키지의 `prepack` 스크립트를 실행합니다. 루트의 `LICENSE`와 `README.md`, 빌드된 `packages/ui/dist`를 `packages/collector/`(`ui-dist/`로) 복사해 배포되는 tarball이 자기완결적이 되도록 합니다. 이 복사본들은 git에서 무시되며 pack할 때마다 다시 생성됩니다.
+
 ## 라이선스
 
 [MIT](LICENSE).

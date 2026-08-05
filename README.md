@@ -110,6 +110,19 @@ $ pnpm exercise:scenarios s4   # unreachable MCP server -> mcp:client:connect er
 
 `pnpm exercise:fiber` additionally injects synthetic fiber span events for the Timeline tab.
 
+### Publishing
+
+Only `packages/collector` is published, as the `agents-devtools` npm package (CLI + bundled UI + `./client` and `./protocol` subpath exports). `protocol`, `client`, and `ui` stay private workspace packages, bundled in at build time.
+
+```sh
+$ pnpm build                              # builds ui/dist and collector/dist
+$ cd packages/collector
+$ npm pack --dry-run                      # inspect the tarball before publishing
+$ pnpm publish --access public            # rewrites workspace:* deps automatically
+```
+
+`pnpm publish` runs the package's `prepack` script first, which copies the root `LICENSE` and `README.md` and the built `packages/ui/dist` into `packages/collector/` (as `ui-dist/`) so the published tarball is self-contained — these copies are gitignored and regenerated on every pack.
+
 ## License
 
 [MIT](LICENSE).
