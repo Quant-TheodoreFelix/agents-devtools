@@ -23,6 +23,28 @@ async function loadConfig(): Promise<UiConfig> {
   return { ingestHost: "127.0.0.1", ingestPort: DEFAULT_INGEST_PORT };
 }
 
+let activeHttpBase: string | null = null;
+
+async function fetchSince(httpBase: string, since: number): Promise<void> {
+  try {
+    const res = await fetch(`${httpBase}/events?since=${since}`);
+    if (res.ok) {
+      const data = (await res.json()) as {
+        envelopes: EventEnvelope[];
+        dropped: number;
+      };
+      useStore.getState().addEnvelopes(data.envelopes);
+      useStore.getState().setDropped(data.dropped);
+    }
+  } catch {}
+}
+
+// paused/replay가 끝난 뒤 놓친 구간을 collector의 링버퍼에서 다시 채운다
+export async function requestResync(): Promise<void> {
+  if (activeHttpBase === null) return;
+  await fetchSince(activeHttpBase, useStore.getState().lastSeq);
+}
+
 export function startConnection(): void {
   void run();
 }
@@ -31,6 +53,7 @@ async function run(): Promise<void> {
   const config = await loadConfig();
   const httpBase = `http://${config.ingestHost}:${config.ingestPort}`;
   const wsUrl = `ws://${config.ingestHost}:${config.ingestPort}/ws`;
+  activeHttpBase = httpBase;
 
   const connect = () => {
     useStore.getState().setStatus("connecting");
@@ -47,18 +70,7 @@ async function run(): Promise<void> {
     };
 
     const backfill = async () => {
-      try {
-        const since = useStore.getState().lastSeq;
-        const res = await fetch(`${httpBase}/events?since=${since}`);
-        if (res.ok) {
-          const data = (await res.json()) as {
-            envelopes: EventEnvelope[];
-            dropped: number;
-          };
-          useStore.getState().addEnvelopes(data.envelopes);
-          useStore.getState().setDropped(data.dropped);
-        }
-      } catch {}
+      await fetchSince(httpBase, useStore.getState().lastSeq);
       backfilled = true;
       useStore.getState().addEnvelopes(pending.splice(0));
     };

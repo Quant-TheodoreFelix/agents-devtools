@@ -14,6 +14,7 @@ import {
   payloadPreview
 } from "./format";
 import { ChatView } from "./ChatView";
+import { requestResync } from "./connection";
 import { ConnectionsView } from "./ConnectionsView";
 import {
   isLocaleId,
@@ -23,6 +24,7 @@ import {
 } from "./i18n";
 import { useT } from "./i18n/useT";
 import { SchedulesView } from "./SchedulesView";
+import { buildSessionText, parseSessionText } from "./session";
 import { Sidebar } from "./Sidebar";
 import { useStore, type Row, type Tab } from "./store";
 import { severityForType } from "./timeline";
@@ -62,6 +64,47 @@ function LanguageSelect() {
   );
 }
 
+function ExportButton() {
+  const rows = useStore((s) => s.rows);
+  const t = useT();
+  const handleExport = () => {
+    const now = Date.now();
+    const text = buildSessionText(rows, now);
+    const blob = new Blob([text], { type: "application/x-ndjson" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `agents-devtools-session-${now}.ndjson`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  return (
+    <button type="button" onClick={handleExport}>
+      {t("header.export")}
+    </button>
+  );
+}
+
+function PauseButton() {
+  const paused = useStore((s) => s.paused);
+  const setPaused = useStore((s) => s.setPaused);
+  const session = useStore((s) => s.session);
+  const t = useT();
+  return (
+    <button
+      type="button"
+      disabled={session.kind === "replay"}
+      onClick={() => {
+        const next = !paused;
+        setPaused(next);
+        if (!next) void requestResync();
+      }}
+    >
+      {paused ? t("header.resume") : t("header.pause")}
+    </button>
+  );
+}
+
 function Header() {
   const dropped = useStore((s) => s.dropped);
   const total = useStore((s) => s.rows.length);
@@ -81,11 +124,96 @@ function Header() {
       )}
       <span className="spacer" />
       <LanguageSelect />
+      <PauseButton />
+      <ExportButton />
       <button type="button" onClick={clear}>
         {t("header.clear")}
       </button>
     </header>
   );
+}
+
+function ReplayBanner() {
+  const session = useStore((s) => s.session);
+  const exitReplay = useStore((s) => s.exitReplay);
+  const t = useT();
+  if (session.kind !== "replay") return null;
+  return (
+    <div className="replay-banner">
+      <span>{t("replay.viewing", { fileName: session.fileName })}</span>
+      {session.header !== null && (
+        <span className="card-meta">
+          {formatTime(session.header.createdAt)}
+        </span>
+      )}
+      {session.parseErrors > 0 && (
+        <span className="card-meta warn">
+          {t("replay.errors", { count: session.parseErrors })}
+        </span>
+      )}
+      <span className="spacer" />
+      <button
+        type="button"
+        onClick={() => {
+          exitReplay();
+          void requestResync();
+        }}
+      >
+        {t("replay.returnToLive")}
+      </button>
+    </div>
+  );
+}
+
+function useSessionDrop(): boolean {
+  const loadReplay = useStore((s) => s.loadReplay);
+  const [dragging, setDragging] = useState(false);
+
+  useEffect(() => {
+    let depth = 0;
+    const hasFiles = (e: DragEvent) =>
+      e.dataTransfer !== null && e.dataTransfer.types.includes("Files");
+
+    const onDragOver = (e: DragEvent) => {
+      if (hasFiles(e)) e.preventDefault();
+    };
+    const onDragEnter = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+      depth += 1;
+      setDragging(true);
+    };
+    const onDragLeave = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
+      depth = Math.max(0, depth - 1);
+      if (depth === 0) setDragging(false);
+    };
+    const onDrop = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+      depth = 0;
+      setDragging(false);
+      const file = e.dataTransfer?.files[0];
+      if (file === undefined) return;
+      void file.text().then((text) => {
+        const { header, envelopes, errors } = parseSessionText(text);
+        loadReplay(file.name, header, envelopes, errors);
+      });
+    };
+
+    window.addEventListener("dragover", onDragOver);
+    window.addEventListener("dragenter", onDragEnter);
+    window.addEventListener("dragleave", onDragLeave);
+    window.addEventListener("drop", onDrop);
+    return () => {
+      window.removeEventListener("dragover", onDragOver);
+      window.removeEventListener("dragenter", onDragEnter);
+      window.removeEventListener("dragleave", onDragLeave);
+      window.removeEventListener("drop", onDrop);
+    };
+  }, [loadReplay]);
+
+  return dragging;
 }
 
 function FilterBar() {
@@ -323,6 +451,8 @@ const TAB_VIEWS: Record<Exclude<Tab, "stream">, ComponentType> = {
 export function App() {
   const activeTab = useStore((s) => s.activeTab);
   const locale = useStore((s) => s.locale);
+  const t = useT();
+  const dragging = useSessionDrop();
   useEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
@@ -330,6 +460,7 @@ export function App() {
   return (
     <div className="app">
       <Header />
+      <ReplayBanner />
       <TabBar />
       <main className="main">
         <Sidebar />
@@ -342,6 +473,9 @@ export function App() {
         )}
         <DetailPanel />
       </main>
+      {dragging && (
+        <div className="drop-overlay">{t("replay.dropHint")}</div>
+      )}
     </div>
   );
 }

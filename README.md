@@ -11,6 +11,7 @@ It provides:
 - chat recovery inspection
 - a schedule board
 - connection lifecycles
+- session recording, export, and replay (NDJSON)
 
 In short, it's a React DevTools / Chrome Network tab, but for Cloudflare Agents.
 
@@ -50,6 +51,20 @@ export class MyAgent extends Agent<Env, State> {
 ```
 
 `captureState` is only invoked for `state:update` events and never mutates the event forwarded to the original SDK behavior (`base`) — it only augments the copy sent to the collector. The snapshot is shallow (nested objects/arrays/maps/sets are summarized as `[object]` / `[array(n)]`, not recursed into), long strings are truncated, and the whole snapshot is dropped in favor of a `{ "[truncated]": true }` marker if it would exceed a few KB. This is off by default because agent state can contain sensitive data — only enable it for local debugging.
+
+### Recording and replay
+
+Pass `--record <file>` to the CLI to have the collector append every event to an NDJSON session file as it arrives:
+
+```sh
+$ npx agents-devtools --record ./session.ndjson
+```
+
+Independently, the UI itself can export whatever is currently in the buffer: the **Export** button in the header downloads the visible events as an `.ndjson` file — a session header line followed by one event envelope per line, the same format `--record` writes to disk.
+
+To review a session later, drag an `.ndjson` file onto the UI. This pauses live ingestion and swaps the view to the recorded session (a banner shows the file name and lets you jump back). Click **Return to live** to resume — the UI backfills whatever arrived while you were looking at the recording, so nothing in between is lost.
+
+Use **Pause** in the header to freeze the view without importing anything; **Resume** backfills the gap the same way. The dropped-event counter next to it reflects the collector's ring buffer, not the UI — it rises when events are evicted before the UI ever sees them (buffer overflow), independent of pause state.
 
 ## Development
 
