@@ -602,7 +602,11 @@ summary.card-head::-webkit-details-marker {
   border-color: #3fb950;
 }
 
-.incident-exhausted,
+.incident-exhausted {
+  color: #db6d28;
+  border-color: #db6d28;
+}
+
 .incident-failed,
 .turn-failed,
 .sched-failed {

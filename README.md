@@ -55,7 +55,7 @@ The collector listens on `127.0.0.1:4111` and the UI runs at `http://127.0.0.1:4
 | Local runtime      | `wrangler dev` (production Workers need a Tail Worker, not yet supported)                                               |
 | Browser (UI)       | any current evergreen browser (Chrome, Firefox, Safari, Edge)                                                           |
 
-Verified against `agents@0.20.1` and `@cloudflare/ai-chat@0.10.1`. The event schema is best-effort forward compatible — unknown event types render as raw JSON in the Stream tab instead of crashing the UI.
+Verified against `agents@0.20.1` and `@cloudflare/ai-chat@0.10.1`. The peer range is intentionally wide but only 0.20.1 is exercised end-to-end: across `agents` 0.7.0 -> 0.20.1 (14 minor releases) the declared event union grew from 31 to 91 types with zero removals, so older minors should decode fine, yet they are not verified. The event schema is best-effort forward compatible — unknown event types render as raw JSON in the Stream tab instead of crashing the UI.
 
 ### Opt-in state snapshots
 
@@ -68,6 +68,8 @@ export class MyAgent extends Agent<Env, State> {
 ```
 
 `captureState` is only invoked for `state:update` events and never mutates the event forwarded to the original SDK behavior (`base`) — it only augments the copy sent to the collector. The snapshot is shallow (nested objects/arrays/maps/sets are summarized as `[object]` / `[array(n)]`, not recursed into), long strings are truncated, and the whole snapshot is dropped in favor of a `{ "[truncated]": true }` marker if it would exceed a few KB. This is off by default because agent state can contain sensitive data — only enable it for local debugging.
+
+State snapshots are the only payload the collector rewrites; every other event payload is forwarded verbatim. One of them carries conversation content: `chat:recovery:exhausted` ships `partialText` and `partialParts`, the assistant output that was streamed before recovery gave up, even though the published type for that event declares neither field. If you record a session with `--record`, that text is written to the NDJSON file.
 
 ### Recording and replay
 

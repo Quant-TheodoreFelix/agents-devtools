@@ -23,11 +23,11 @@ async function s1(client) {
   console.log("  waiting for recovery alarm (~10s)...");
   await new Promise((r) => setTimeout(r, 10_000));
 
-  console.log("[S1] stall always -> recovery exhausted (no_progress_timeout)");
+  console.log("[S1] stall always -> recovery failed");
   console.log("  setStall:", await client.call("setStall", ["always"]));
   const second = await client.call("say", ["hello, stall forever"]);
   console.log("  say (stalls after 2s):", JSON.stringify(second));
-  console.log("  waiting for exhaustion (~25s)...");
+  console.log("  waiting for terminal failure (~25s)...");
   await new Promise((r) => setTimeout(r, 25_000));
   console.log("  setStall:", await client.call("setStall", ["none"]));
 }
