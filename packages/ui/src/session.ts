@@ -8,7 +8,7 @@ import {
 } from "@agents-devtools/protocol";
 import type { Row } from "./store";
 
-export const TOOL_ID = "agents-devtools/ui@0.1.0";
+export const TOOL_ID = "agents-devtools/ui@0.1.1";
 
 export function buildSessionText(rows: Row[], createdAt: number): string {
   const header = makeSessionHeader({ createdAt, tool: TOOL_ID });
